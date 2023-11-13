@@ -6,10 +6,10 @@ class GroceryListItem extends StatelessWidget {
 
   final GroceryItem item;
   final int index;
-  final void Function(int index) removeItem;
+  final void Function(GroceryItem item, int index) removeItem;
 
   void _deleteItem(direction) {
-    removeItem(index);
+    removeItem(item, index);
   }
 
   @override
