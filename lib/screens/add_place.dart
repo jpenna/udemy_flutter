@@ -1,33 +1,36 @@
-import 'package:first_app/models/place.dart';
-import 'package:first_app/providers/places_list_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'package:favorite_places/providers/user_places.dart';
 
 class AddPlaceScreen extends ConsumerStatefulWidget {
   const AddPlaceScreen({super.key});
 
   @override
-  ConsumerState<AddPlaceScreen> createState() => _AddPlaceScreenState();
+  ConsumerState<AddPlaceScreen> createState() {
+    return _AddPlaceScreenState();
+  }
 }
 
 class _AddPlaceScreenState extends ConsumerState<AddPlaceScreen> {
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  String? _placeName;
+  final _titleController = TextEditingController();
 
-  void _onBack(context) {
-    Navigator.pop(context);
-  }
+  void _savePlace() {
+    final enteredTitle = _titleController.text;
 
-  void _onSubmit() {
-    _formKey.currentState!.save();
-
-    if (_placeName == null || _placeName!.isEmpty) {
+    if (enteredTitle.isEmpty) {
       return;
     }
 
-    ref.read(placesListProvider.notifier).addPlace(Place(title: _placeName!));
-    Navigator.pop(context);
+    ref.read(userPlacesProvider.notifier).addPlace(enteredTitle);
+
+    Navigator.of(context).pop();
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    super.dispose();
   }
 
   @override
@@ -35,62 +38,25 @@ class _AddPlaceScreenState extends ConsumerState<AddPlaceScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Add new Place'),
-        // automaticallyImplyLeading: true,
-        leading: Builder(
-          builder: (context) => BackButton(
-            onPressed: () {
-              _onBack(context);
-            },
-          ),
-        ),
       ),
       body: SingleChildScrollView(
-        child: Form(
-          key: _formKey,
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                TextFormField(
-                  style: TextStyle(
-                    decorationThickness: 0,
-                    color: Theme.of(context).colorScheme.onBackground,
-                  ),
-                  decoration: const InputDecoration(
-                    labelText: 'Title',
-                  ),
-                  onSaved: (newValue) {
-                    _placeName = newValue;
-                  },
-                  validator: (String? value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter the place name';
-                    }
-                    return null;
-                  },
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 16.0),
-                  child: Center(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        // Validate will return true if the form is valid, or false if
-                        // the form is invalid.
-                        if (_formKey.currentState!.validate()) {
-                          _onSubmit();
-                        }
-                      },
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [Icon(Icons.add), Text('Add Place')],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          children: [
+            TextField(
+              decoration: const InputDecoration(labelText: 'Title'),
+              controller: _titleController,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onBackground,
+              ),
             ),
-          ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: _savePlace,
+              icon: const Icon(Icons.add),
+              label: const Text('Add Place'),
+            ),
+          ],
         ),
       ),
     );
