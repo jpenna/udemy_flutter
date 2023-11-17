@@ -1,9 +1,10 @@
 import 'dart:convert';
 
+import 'package:favorite_places/consts.dart';
 import 'package:favorite_places/models/place.dart';
 import 'package:flutter/material.dart';
-import 'package:location/location.dart';
 import 'package:http/http.dart' as http;
+import 'package:location/location.dart';
 
 class LocationInput extends StatefulWidget {
   const LocationInput({
@@ -22,13 +23,6 @@ class LocationInput extends StatefulWidget {
 class _LocationInputState extends State<LocationInput> {
   PlaceLocation? _selectedLocation;
   bool _isGettingLocation = false;
-  static const String API_KEY = 'AIzaSyD67kj5TsYAKtvGUgVBY1KCdIpy6Cf8UO0';
-
-  String get imageUrl {
-    final lat = _selectedLocation!.latitude;
-    final long = _selectedLocation!.longitude;
-    return 'https://maps.googleapis.com/maps/api/staticmap?center=$lat,$long&zoom=13&size=600x300&maptype=roadmap &markers=color:red%7Clabel:A%7C$lat,$long &key=$API_KEY';
-  }
 
   void _getCurrentLocation() async {
     Location location = Location();
@@ -93,7 +87,7 @@ class _LocationInputState extends State<LocationInput> {
       containerContent = const CircularProgressIndicator();
     } else if (_selectedLocation != null) {
       containerContent = Image.network(
-        imageUrl,
+        _selectedLocation!.imageUrl,
         width: double.infinity,
         height: double.infinity,
         fit: BoxFit.cover,
