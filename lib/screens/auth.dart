@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:chat_app/widgets/user_image_picker.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
@@ -20,6 +21,7 @@ class _AuthScreenState extends State<AuthScreen> {
   final _form = GlobalKey<FormState>();
 
   bool _isLogin = true;
+  String _inputUsername = '';
   String _inputEmail = '';
   String _inputPassword = '';
   File? _imageFile;
@@ -49,14 +51,21 @@ class _AuthScreenState extends State<AuthScreen> {
           password: _inputPassword,
         );
 
+        final userId = userCredential.user!.uid;
+
         final storageRef = FirebaseStorage.instance
             .ref()
             .child('user_images')
-            .child('${userCredential.user!.uid}.jpg');
+            .child('$userId.jpg');
 
         await storageRef.putFile(_imageFile!);
         String imageUrl = await storageRef.getDownloadURL();
-        print(imageUrl);
+
+        await FirebaseFirestore.instance.collection('users').doc(userId).set({
+          'username': _inputUsername,
+          'email': userCredential.user!.email,
+          'imageUrl': imageUrl,
+        });
       }
     } on FirebaseAuthException catch (error) {
       if (!context.mounted) return;
@@ -66,9 +75,11 @@ class _AuthScreenState extends State<AuthScreen> {
         SnackBar(content: Text(error.message ?? 'Sign up failed.')),
       );
     } finally {
-      setState(() {
-        _isAuthenticating = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isAuthenticating = false;
+        });
+      }
     }
   }
 
@@ -124,11 +135,26 @@ class _AuthScreenState extends State<AuthScreen> {
                               return null;
                             },
                             onSaved: (newValue) {
-                              setState(() {
-                                _inputEmail = newValue!;
-                              });
+                              _inputEmail = newValue!;
                             },
                           ),
+                          if (!_isLogin)
+                            TextFormField(
+                              decoration:
+                                  const InputDecoration(labelText: 'Username'),
+                              autocorrect: false,
+                              validator: (value) {
+                                if (value == null ||
+                                    value.isEmpty ||
+                                    value.trim().length < 4) {
+                                  return 'Your username should have at least 4 characters.';
+                                }
+                                return null;
+                              },
+                              onSaved: (newValue) {
+                                _inputUsername = newValue!;
+                              },
+                            ),
                           TextFormField(
                             decoration:
                                 const InputDecoration(labelText: 'Password'),
@@ -140,9 +166,7 @@ class _AuthScreenState extends State<AuthScreen> {
                               return null;
                             },
                             onSaved: (newValue) {
-                              setState(() {
-                                _inputPassword = newValue!;
-                              });
+                              _inputPassword = newValue!;
                             },
                           ),
                           const SizedBox(
