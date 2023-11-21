@@ -39,11 +39,13 @@ class _AuthScreenState extends State<AuthScreen> {
     });
 
     try {
+      String userId;
       if (_isLogin) {
         final userCredential = await _firebaseAuth.signInWithEmailAndPassword(
           email: _inputEmail,
           password: _inputPassword,
         );
+        userId = userCredential.user!.uid;
       } else {
         final userCredential =
             await _firebaseAuth.createUserWithEmailAndPassword(
@@ -51,7 +53,7 @@ class _AuthScreenState extends State<AuthScreen> {
           password: _inputPassword,
         );
 
-        final userId = userCredential.user!.uid;
+        userId = userCredential.user!.uid;
 
         final storageRef = FirebaseStorage.instance
             .ref()
@@ -120,6 +122,7 @@ class _AuthScreenState extends State<AuthScreen> {
                               },
                             ),
                           TextFormField(
+                            key: const ValueKey('email'),
                             decoration: const InputDecoration(
                               labelText: 'Email Address',
                             ),
@@ -140,6 +143,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           ),
                           if (!_isLogin)
                             TextFormField(
+                              key: const ValueKey('username'),
                               decoration:
                                   const InputDecoration(labelText: 'Username'),
                               autocorrect: false,
@@ -156,6 +160,7 @@ class _AuthScreenState extends State<AuthScreen> {
                               },
                             ),
                           TextFormField(
+                            key: const ValueKey('password'),
                             decoration:
                                 const InputDecoration(labelText: 'Password'),
                             obscureText: true,
